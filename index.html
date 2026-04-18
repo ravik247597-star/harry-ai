@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HARRY - Royal & Humble AI</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <style>
+        :root { 
+            --gold: #d4af37; 
+            --red: #ff3131; 
+            --black: #000000;
+            --white: #ffffff;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body { 
+            background: var(--black); 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Sidebar - History Navigation */
+        #sidebar { 
+            width: 280px; height: 100%; background: #080808; 
+            border-right: 2px solid var(--gold); position: fixed; 
+            left: -280px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000;
+        }
+        #sidebar.open { left: 0; }
+
+        .app-wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; }
+
+        /* Premium Header */
+        header { 
+            padding: env(safe-area-inset-top) 20px 10px 20px;
+            background: rgba(0,0,0,0.95);
+            display: flex; align-items: center; 
+            border-bottom: 2px solid var(--gold);
+            min-height: 70px;
+        }
+
+        .menu-btn { background: none; border: none; color: var(--gold); font-size: 30px; cursor: pointer; }
+        .logo { font-size: 26px; font-weight: 900; color: var(--gold); letter-spacing: 6px; flex: 1; text-align: center; }
+
+        /* Chat Display */
+        #chat-window { 
+            flex: 1; padding: 20px; overflow-y: auto; 
+            display: flex; flex-direction: column; gap: 20px;
+            background: radial-gradient(circle at center, #111, #000);
+            padding-bottom: 100px;
+        }
+
+        .msg { 
+            max-width: 85%; padding: 15px 20px; border-radius: 22px; 
+            font-size: 16px; line-height: 1.6; position: relative;
+        }
+
+        .user { 
+            align-self: flex-end; background: linear-gradient(135deg, var(--gold), #b8860b); 
+            color: #000; font-weight: 600; border-bottom-right-radius: 4px;
+        }
+
+        .bot { 
+            align-self: flex-start; background: var(--white); color: #000; 
+            border-bottom-left-radius: 4px; border: 1.5px solid var(--gold);
+        }
+
+        .important { color: var(--red); font-weight: 800; }
+
+        /* Perfect Math Block */
+        .math-container { 
+            background: #f8f8f8; padding: 15px; border-radius: 12px; 
+            margin: 10px 0; border-left: 6px solid var(--red); 
+            overflow-x: auto; color: #000; font-size: 18px;
+        }
+
+        /* Floating Input Dock */
+        .input-dock { 
+            background: rgba(0,0,0,0.9); padding: 15px;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            display: flex; align-items: center; gap: 12px;
+            border-top: 1px solid #222;
+        }
+
+        .plus-btn { 
+            width: 52px; height: 52px; background: #151515; border: 2px solid var(--gold); 
+            border-radius: 15px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; color: var(--gold); font-size: 30px;
+        }
+
+        input { 
+            flex: 1; background: #1a1a1a; border: 1px solid #333; padding: 15px; 
+            color: white; border-radius: 15px; outline: none; font-size: 16px;
+        }
+
+        .send-btn { 
+            background: var(--red); width: 52px; height: 52px; border: none; 
+            border-radius: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1500; }
+        #overlay.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div style="padding: 30px;">
+        <h2 style="color:var(--gold); letter-spacing: 2px;">ARCHIVE</h2>
+        <div id="historyList" style="margin-top: 20px; color: #555;">No history.</div>
+    </div>
+</div>
+
+<div id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app-wrapper">
+    <header>
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="logo">HARRY</div>
+    </header>
+
+    <div id="chat-window">
+        <div class="msg bot">Hello! I am <span class="important">HARRY</span>. How can I help you today? I am here to assist you with <span class="important">kindness</span> and <span class="important">accuracy</span>.</div>
+    </div>
+
+    <div class="input-dock">
+        <label class="plus-btn">+<input type="file" style="display:none;" onchange="handleFile()"></label>
+        <input type="text" id="userInput" placeholder="Ask with respect..." autocomplete="off">
+        <button class="send-btn" onclick="processQuery()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+
+    function processQuery() {
+        const input = document.getElementById("userInput");
+        const val = input.value.trim();
+        if (!val) return;
+
+        addMsg(val, "user");
+        input.value = "";
+
+        setTimeout(() => {
+            const lang = detectLang(val);
+            const response = generateHumbleResponse(val, lang);
+            addMsg(response, "bot");
+            renderMath();
+        }, 600);
+    }
+
+    function detectLang(t) {
+        if (/[\u0a00-\u0a7f]/.test(t)) return "pa";
+        if (/[\u0900-\u097f]/.test(t)) return "hi";
+        return "en";
+    }
+
+    // --- ਨਿਮਰਤਾ ਅਤੇ ਸਬਰ ਵਾਲਾ ਇੰਜਣ ---
+    function generateHumbleResponse(q, lang) {
+        const lowQ = q.toLowerCase();
+        
+        // ਗਾਲਾਂ ਜਾਂ ਗੁੱਸੇ ਦੀ ਜਾਂਚ (Safety Filter)
+        const badWords = ["ਗਾਲ", "badword1", "badword2"]; // ਇੱਥੇ ਤੁਸੀਂ ਹੋਰ ਸ਼ਬਦ ਜੋੜ ਸਕਦੇ ਹੋ
+        const isAngry = badWords.some(word => lowQ.includes(word));
+
+        if (isAngry) {
+            if (lang === "pa") return "ਵੀਰ ਜੀ, ਮੈਨੂੰ ਬਹੁਤ <span class='important'>ਖੇਦ</span> ਹੈ ਜੇਕਰ ਮੇਰੇ ਤੋਂ ਕੋਈ ਗਲਤੀ ਹੋਈ ਹੋਵੇ। ਮੈਂ ਤੁਹਾਡੀ ਸੇਵਾ ਲਈ ਹਮੇਸ਼ਾ <span class='important'>ਨਿਮਰਤਾ</span> ਨਾਲ ਹਾਜ਼ਰ ਹਾਂ।";
+            return "I apologize if I caused any frustration. I am here to help you with <span class='important'>patience</span> and <span class='important'>respect</span>.";
+        }
+
+        if (lang === "pa") {
+            if (q.includes("ਸਵਾਲ") || q.includes("ਮੈਥ")) {
+                return "ਵੀਰ ਜੀ, ਮੈਥ ਦਾ ਉੱਤਰ <span class='important'>ਸਹੀ ਸ਼ਬਦਾਵਲੀ</span> ਵਿੱਚ ਇਹ ਰਿਹਾ: <div class='math-container'>$$\\lim_{x \\to \\infty} \\frac{1}{x} = 0$$</div>";
+            }
+            return "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਵੀਰ ਜੀ! ਮੈਂ ਤੁਹਾਡਾ ਆਪਣਾ <span class='important'>HARRY</span> ਹਾਂ। ਦੱਸੋ ਮੈਂ ਤੁਹਾਡੀ ਕੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?";
+        }
+        
+        return "It is my <span class='important'>pleasure</span> to assist you. Your query has been processed with <span class='important'>100% precision</span>.";
+    }
+
+    function addMsg(text, type) {
+        const chat = document.getElementById("chat-window");
+        const div = document.createElement("div");
+        div.className = `msg ${type}`;
+        div.innerHTML = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function renderMath() {
+        const boxes = document.querySelectorAll('.math-container:not(.done)');
+        boxes.forEach(box => {
+            katex.render(box.innerText.replace(/\$\$/g, ''), box, { throwOnError: false, displayMode: true });
+            box.classList.add('done');
+        });
+    }
+
+    function handleFile() {
+        addMsg("📷 <span class='important'>Respectfully</span> receiving your media for analysis.", "user");
+    }
+
+    document.getElementById("userInput").addEventListener("keypress", (e) => { if (e.key === "Enter") processQuery(); });
+</script>
+
+</body>
+</html>
